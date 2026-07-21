@@ -41,6 +41,9 @@ dependencies:
   # Penyimpanan aman untuk access_token (JWT)
   flutter_secure_storage: ^9.2.2
 
+  # Font Inter (Google Fonts) untuk tampilan yang lebih rapi
+  google_fonts: ^6.2.1
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
