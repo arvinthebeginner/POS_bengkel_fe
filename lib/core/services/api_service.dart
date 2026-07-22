@@ -29,7 +29,8 @@ class ApiService {
     if (response.statusCode == 403) {
       throw ForbiddenException(body['message'] as String? ?? 'Forbidden');
     }
-    if (response.statusCode < 200 || response.statusCode >= 300 ||
+    if (response.statusCode < 200 ||
+        response.statusCode >= 300 ||
         body['success'] == false) {
       throw ApiException(body['message'] as String? ?? 'Terjadi kesalahan');
     }
@@ -165,16 +166,19 @@ class ApiService {
     return body['data'] as List<dynamic>;
   }
 
-  Future<void> createTransaksi({
+  /// [barang] berisi item dengan key `stok_id` & `qty` saja — harga & total
+  /// dihitung di server dari data stok saat ini (bukan dari input client)
+  /// supaya harga transaksi tidak bisa dimanipulasi.
+  Future<num> createTransaksi({
     required List<Map<String, dynamic>> barang,
-    required num total,
   }) async {
     final response = await _client.post(
       _uri('/transaksi'),
       headers: await _authHeaders(),
-      body: jsonEncode({'barang': barang, 'total': total}),
+      body: jsonEncode({'barang': barang}),
     );
-    _decode(response);
+    final body = _decode(response);
+    return (body['data']?['total'] as num?) ?? 0;
   }
 
   Future<List<dynamic>> getTransaksi() async {

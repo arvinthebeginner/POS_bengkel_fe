@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/services/api_service.dart';
-import '../../home/screens/home_screen.dart';
+import '../../dashboard/screens/dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -42,9 +42,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (_) => const MyHomePage(title: 'Flutter Demo Home Page'),
-        ),
+        MaterialPageRoute(builder: (_) => const DashboardScreen()),
       );
     } on ApiException catch (e) {
       setState(() => _errorMessage = e.message);

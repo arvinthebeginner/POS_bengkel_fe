@@ -44,6 +44,9 @@ dependencies:
   # Font Inter (Google Fonts) untuk tampilan yang lebih rapi
   google_fonts: ^6.2.1
 
+  # Format angka/mata uang (Rupiah)
+  intl: ^0.19.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
