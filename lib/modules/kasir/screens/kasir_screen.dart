@@ -26,7 +26,6 @@ class _KasirScreenState extends State<KasirScreen> {
   List<Stok> _stokList = [];
   String _searchQuery = '';
 
-  // stok id -> qty di keranjang
   final Map<String, int> _cartQty = {};
 
   @override
@@ -104,8 +103,6 @@ class _KasirScreenState extends State<KasirScreen> {
 
   void _removeFromCart(String stokId) {
     setState(() => _cartQty.remove(stokId));
-    // Sheet pakai StatefulBuilder lewat rebuild parent; tutup & buka ulang
-    // dilakukan lewat setState di atas karena CartSheet membaca `items` dari sini.
     Navigator.of(context).pop();
     _openCartSheet();
   }
@@ -125,7 +122,6 @@ class _KasirScreenState extends State<KasirScreen> {
 
     if (result == true) {
       setState(() => _cartQty.clear());
-      // Stok sudah dikurangi di server, refresh supaya "Sisa stok" akurat.
       await _loadStok();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

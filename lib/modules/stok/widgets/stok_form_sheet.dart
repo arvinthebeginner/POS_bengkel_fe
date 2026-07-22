@@ -3,10 +3,6 @@ import 'package:flutter/services.dart';
 import '../../../core/models/stok.dart';
 import '../../../core/services/api_service.dart';
 
-/// Bottom sheet untuk tambah/edit stok.
-/// Kalau [existing] diisi, mode edit (judul & tombol menyesuaikan).
-/// Mengembalikan `true` lewat Navigator.pop kalau berhasil simpan/hapus,
-/// supaya layar pemanggil tahu kapan harus refresh listnya.
 class StokFormSheet extends StatefulWidget {
   const StokFormSheet({super.key, this.existing});
 

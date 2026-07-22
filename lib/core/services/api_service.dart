@@ -75,6 +75,15 @@ class ApiService {
     _decode(response);
   }
 
+  Future<List<dynamic>> getBranches() async {
+    final response = await _client.get(
+      _uri('/branches'),
+      headers: {'Content-Type': 'application/json'},
+    );
+    final body = _decode(response);
+    return body['data'] as List<dynamic>;
+  }
+
   Future<Map<String, dynamic>> getMe() async {
     final response = await _client.get(
       _uri('/auth/me'),
@@ -166,9 +175,6 @@ class ApiService {
     return body['data'] as List<dynamic>;
   }
 
-  /// [barang] berisi item dengan key `stok_id` & `qty` saja — harga & total
-  /// dihitung di server dari data stok saat ini (bukan dari input client)
-  /// supaya harga transaksi tidak bisa dimanipulasi.
   Future<num> createTransaksi({
     required List<Map<String, dynamic>> barang,
   }) async {
