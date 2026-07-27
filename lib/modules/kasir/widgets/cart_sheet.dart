@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/neumorphic.dart';
 import '../models/cart_item.dart';
 
 /// Bottom sheet review keranjang sebelum bayar.
@@ -53,18 +55,15 @@ class _CartSheetState extends State<CartSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Container(
         padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-        decoration: BoxDecoration(
-          color: theme.scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        decoration: const BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -76,27 +75,27 @@ class _CartSheetState extends State<CartSheet> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+                  color: AppColors.secondary.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
-            Text(
+            const Text(
               'Keranjang',
-              style: theme.textTheme.titleLarge?.copyWith(
+              style: TextStyle(
+                color: AppColors.onSurface,
+                fontSize: 20,
                 fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 16),
             if (widget.items.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 32),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 32),
                 child: Center(
                   child: Text(
                     'Keranjang kosong',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                    style: TextStyle(color: AppColors.secondary),
                   ),
                 ),
               )
@@ -108,67 +107,83 @@ class _CartSheetState extends State<CartSheet> {
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: widget.items.length,
-                  separatorBuilder: (_, _) => const Divider(height: 20),
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final item = widget.items[index];
-                    return Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                item.stok.nama,
-                                style: theme.textTheme.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.w600,
+                    return NeumorphicBox(
+                      style: NeumorphicStyle.pressed,
+                      borderRadius: 16,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.stok.nama,
+                                  style: const TextStyle(
+                                    color: AppColors.onSurface,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                '${item.qty} x ${widget.currencyFormat.format(item.stok.harga)}',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
+                                const SizedBox(height: 2),
+                                Text(
+                                  '${item.qty} x ${widget.currencyFormat.format(item.stok.harga)}',
+                                  style: const TextStyle(
+                                    color: AppColors.secondary,
+                                    fontSize: 12,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                        Text(
-                          widget.currencyFormat.format(item.subtotal),
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
+                          Text(
+                            widget.currencyFormat.format(item.subtotal),
+                            style: const TextStyle(
+                              color: AppColors.onSurface,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                        IconButton(
-                          onPressed: _isSubmitting
-                              ? null
-                              : () => widget.onRemove(item.stok.id),
-                          icon: const Icon(
-                            Icons.delete_outline_rounded,
-                            size: 20,
+                          IconButton(
+                            onPressed: _isSubmitting
+                                ? null
+                                : () => widget.onRemove(item.stok.id),
+                            icon: const Icon(
+                              Icons.delete_outline_rounded,
+                              size: 20,
+                              color: AppColors.errorText,
+                            ),
                           ),
-                          color: colorScheme.error,
-                        ),
-                      ],
+                        ],
+                      ),
                     );
                   },
                 ),
               ),
-            const Divider(height: 32),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   'Total',
-                  style: theme.textTheme.titleMedium?.copyWith(
+                  style: TextStyle(
+                    color: AppColors.onSurface,
+                    fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
                   widget.currencyFormat.format(_total),
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: const TextStyle(
+                    color: AppColors.primaryContainer,
+                    fontSize: 20,
                     fontWeight: FontWeight.w700,
-                    color: colorScheme.primary,
                   ),
                 ),
               ],
@@ -181,22 +196,23 @@ class _CartSheetState extends State<CartSheet> {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: colorScheme.errorContainer,
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.errorFill,
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.error_outline_rounded,
                       size: 18,
-                      color: colorScheme.onErrorContainer,
+                      color: AppColors.errorText,
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         _errorMessage!,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onErrorContainer,
+                        style: const TextStyle(
+                          color: AppColors.errorText,
+                          fontSize: 13,
                         ),
                       ),
                     ),
@@ -205,20 +221,10 @@ class _CartSheetState extends State<CartSheet> {
               ),
             ],
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: (widget.items.isEmpty || _isSubmitting)
-                  ? null
-                  : _handleCheckout,
-              child: _isSubmitting
-                  ? SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: theme.colorScheme.onPrimary,
-                      ),
-                    )
-                  : const Text('Konfirmasi Pembayaran'),
+            NeumorphicPrimaryButton(
+              label: 'Konfirmasi Pembayaran',
+              isLoading: _isSubmitting,
+              onPressed: widget.items.isEmpty ? null : _handleCheckout,
             ),
           ],
         ),
