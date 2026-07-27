@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-const String _baseUrl = 'http://192.168.1.5:5001';
+const String _baseUrl = 'https://vms-api-973733869418.asia-southeast2.run.app/';
 
 class ApiService {
   final http.Client _client = http.Client();
