@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 
 enum NeumorphicStyle { raised, pressed }
@@ -144,6 +145,8 @@ class NeumorphicTextField extends StatefulWidget {
     this.textInputAction,
     this.onFieldSubmitted,
     this.validator,
+    this.keyboardType,
+    this.inputFormatters,
   });
 
   final TextEditingController? controller;
@@ -154,6 +157,8 @@ class NeumorphicTextField extends StatefulWidget {
   final TextInputAction? textInputAction;
   final ValueChanged<String>? onFieldSubmitted;
   final FormFieldValidator<String>? validator;
+  final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   State<NeumorphicTextField> createState() => _NeumorphicTextFieldState();
@@ -224,6 +229,8 @@ class _NeumorphicTextFieldState extends State<NeumorphicTextField> {
           textInputAction: widget.textInputAction,
           onFieldSubmitted: widget.onFieldSubmitted,
           validator: widget.validator,
+          keyboardType: widget.keyboardType,
+          inputFormatters: widget.inputFormatters,
           cursorColor: AppColors.primaryContainer,
           style: const TextStyle(color: AppColors.onSurface),
           decoration: InputDecoration(
@@ -242,6 +249,55 @@ class _NeumorphicTextFieldState extends State<NeumorphicTextField> {
         ),
       ),
     );
+  }
+}
+
+/// A raised circular FAB — the one saturated element on the Stok screen,
+/// styled with the same soft, low-opacity red glow as [NeumorphicPrimaryButton]
+/// rather than a hard-edged dual shadow, so it doesn't overpower the pastel UI.
+class NeumorphicFab extends StatelessWidget {
+  const NeumorphicFab({
+    super.key,
+    required this.icon,
+    required this.onPressed,
+    this.tooltip,
+    this.size = 56,
+  });
+
+  final IconData icon;
+  final VoidCallback onPressed;
+  final String? tooltip;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final button = Material(
+      color: Colors.transparent,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onPressed,
+        child: Container(
+          width: size,
+          height: size,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppColors.primaryContainer,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primaryContainer.withValues(alpha: 0.35),
+                offset: const Offset(0, 6),
+                blurRadius: 16,
+              ),
+            ],
+          ),
+          child: Icon(icon, color: AppColors.onPrimary, size: size * 0.43),
+        ),
+      ),
+    );
+
+    return tooltip != null ? Tooltip(message: tooltip, child: button) : button;
   }
 }
 

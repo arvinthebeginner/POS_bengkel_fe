@@ -65,7 +65,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         _username = me['username'] as String? ?? '-';
         _totalStok = stok.length;
         _totalTransaksi = transaksi.length;
-        _recentTransaksi = transaksi.take(2).toList();
+        _recentTransaksi = transaksi.take(10).toList();
       });
     } on UnauthorizedException {
       if (!mounted) return;
@@ -133,197 +133,204 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadDashboard,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // ---------- Header ----------
-                Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    NeumorphicBox(
-                      width: 48,
-                      height: 48,
-                      borderRadius: 24,
-                      padding: const EdgeInsets.all(8),
-                      child: Image.asset('assets/icon/app_icon.png'),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Selamat datang,',
-                            style: TextStyle(
-                              color: AppColors.secondary,
-                              fontSize: 13,
-                            ),
-                          ),
-                          Text(
-                            _isLoading ? 'Memuat...' : _username,
-                            style: const TextStyle(
-                              color: AppColors.onSurface,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    NeumorphicIconButton(
-                      icon: Icons.logout_rounded,
-                      onPressed: _handleLogout,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                if (_errorMessage != null)
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: AppColors.errorFill,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
+                    // ---------- Header ----------
+                    Row(
                       children: [
-                        const Icon(
-                          Icons.error_outline_rounded,
-                          color: AppColors.errorText,
+                        NeumorphicBox(
+                          width: 48,
+                          height: 48,
+                          borderRadius: 24,
+                          padding: const EdgeInsets.all(8),
+                          child: Image.asset('assets/icon/app_icon.png'),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 12),
                         Expanded(
-                          child: Text(
-                            _errorMessage!,
-                            style: const TextStyle(color: AppColors.errorText),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Selamat datang,',
+                                style: TextStyle(
+                                  color: AppColors.secondary,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              Text(
+                                _isLoading ? 'Memuat...' : _username,
+                                style: const TextStyle(
+                                  color: AppColors.onSurface,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                        NeumorphicIconButton(
+                          icon: Icons.logout_rounded,
+                          onPressed: _handleLogout,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    if (_errorMessage != null)
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: AppColors.errorFill,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.error_outline_rounded,
+                              color: AppColors.errorText,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _errorMessage!,
+                                style: const TextStyle(
+                                  color: AppColors.errorText,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    // ---------- Stat cards ----------
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _StatCard(
+                            icon: Icons.inventory_2_outlined,
+                            label: 'Total Item',
+                            sublabel: 'Stok',
+                            value: _isLoading ? '-' : '$_totalStok',
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _StatCard(
+                            icon: Icons.receipt_long_outlined,
+                            label: 'Total',
+                            sublabel: 'Transaksi',
+                            value: _isLoading ? '-' : '$_totalTransaksi',
                           ),
                         ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 28),
 
-                // ---------- Stat cards ----------
-                Row(
-                  children: [
-                    Expanded(
-                      child: _StatCard(
-                        icon: Icons.inventory_2_outlined,
-                        label: 'Total Item',
-                        sublabel: 'Stok',
-                        value: _isLoading ? '-' : '$_totalStok',
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _StatCard(
-                        icon: Icons.receipt_long_outlined,
-                        label: 'Total',
-                        sublabel: 'Transaksi',
-                        value: _isLoading ? '-' : '$_totalTransaksi',
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 28),
-
-                // ---------- Menu Cepat ----------
-                const Text(
-                  'Menu Cepat',
-                  style: TextStyle(
-                    color: AppColors.onSurface,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _MenuTile(
-                        icon: Icons.point_of_sale_rounded,
-                        label: 'Kasir',
-                        onTap: _openKasir,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _MenuTile(
-                        icon: Icons.inventory_2_rounded,
-                        label: 'Stok',
-                        onTap: _openStok,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _MenuTile(
-                        icon: Icons.history_rounded,
-                        label: 'Riwayat',
-                        onTap: _openRiwayat,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 28),
-
-                // ---------- Aktivitas Terakhir ----------
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
+                    // ---------- Menu Cepat ----------
                     const Text(
-                      'Aktivitas Terakhir',
+                      'Menu Cepat',
                       style: TextStyle(
                         color: AppColors.onSurface,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: _openRiwayat,
-                      child: const Text(
-                        'Lihat Semua',
-                        style: TextStyle(
-                          color: AppColors.primaryContainer,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _MenuTile(
+                            icon: Icons.point_of_sale_rounded,
+                            label: 'Kasir',
+                            onTap: _openKasir,
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _MenuTile(
+                            icon: Icons.inventory_2_rounded,
+                            label: 'Stok',
+                            onTap: _openStok,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _MenuTile(
+                            icon: Icons.history_rounded,
+                            label: 'Riwayat',
+                            onTap: _openRiwayat,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                if (!_isLoading && _recentTransaksi.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Text(
-                      'Belum ada transaksi',
-                      style: TextStyle(color: AppColors.secondary),
-                    ),
-                  )
-                else
-                  Column(
-                    children: _recentTransaksi
-                        .map(
-                          (t) => Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: _ActivityCard(
-                              label: _activityLabel(t),
-                              code: _activityCode(t),
-                              time: t.tanggal != null
-                                  ? DateFormat('HH:mm').format(t.tanggal!)
-                                  : '-',
-                              amount: _currencyFormat.format(t.total),
+                    const SizedBox(height: 28),
+
+                    // ---------- Aktivitas Terakhir ----------
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Aktivitas Terakhir',
+                          style: TextStyle(
+                            color: AppColors.onSurface,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: _openRiwayat,
+                          child: const Text(
+                            'Lihat Semua',
+                            style: TextStyle(
+                              color: AppColors.primaryContainer,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                        )
-                        .toList(),
-                  ),
-              ],
-            ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: (!_isLoading && _recentTransaksi.isEmpty)
+                    ? const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Text(
+                          'Belum ada transaksi',
+                          style: TextStyle(color: AppColors.secondary),
+                        ),
+                      )
+                    : ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+                        itemCount: _recentTransaksi.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final t = _recentTransaksi[index];
+                          return _ActivityCard(
+                            label: _activityLabel(t),
+                            code: _activityCode(t),
+                            time: t.tanggal != null
+                                ? DateFormat('HH:mm').format(t.tanggal!)
+                                : '-',
+                            amount: _currencyFormat.format(t.total),
+                          );
+                        },
+                      ),
+              ),
+            ],
           ),
         ),
       ),
@@ -502,10 +509,7 @@ class _ActivityCard extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppColors.successFill,
                   borderRadius: BorderRadius.circular(20),
@@ -527,4 +531,3 @@ class _ActivityCard extends StatelessWidget {
     );
   }
 }
-

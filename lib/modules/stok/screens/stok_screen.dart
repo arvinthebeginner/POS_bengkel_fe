@@ -2,6 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/models/stok.dart';
 import '../../../core/services/api_service.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/widgets/app_bottom_nav.dart';
+import '../../../core/widgets/neumorphic.dart';
+import '../../dashboard/screens/dashboard_screen.dart';
+import '../../kasir/screens/kasir_screen.dart';
+import '../../riwayat/screens/riwayat_screen.dart';
 import '../widgets/stok_form_sheet.dart';
 
 class StokScreen extends StatefulWidget {
@@ -13,6 +19,7 @@ class StokScreen extends StatefulWidget {
 
 class _StokScreenState extends State<StokScreen> {
   final _apiService = ApiService();
+  final _searchController = TextEditingController();
   final _currencyFormat = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
@@ -22,11 +29,30 @@ class _StokScreenState extends State<StokScreen> {
   bool _isLoading = true;
   String? _errorMessage;
   List<Stok> _stokList = [];
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
     _loadStok();
+    _searchController.addListener(() {
+      setState(
+        () => _searchQuery = _searchController.text.trim().toLowerCase(),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Stok> get _filteredStok {
+    if (_searchQuery.isEmpty) return _stokList;
+    return _stokList
+        .where((stok) => stok.nama.toLowerCase().contains(_searchQuery))
+        .toList();
   }
 
   Future<void> _loadStok() async {
@@ -57,13 +83,7 @@ class _StokScreenState extends State<StokScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
-        child: StokFormSheet(existing: existing),
-      ),
+      builder: (context) => StokFormSheet(existing: existing),
     );
 
     if (saved == true) {
@@ -73,21 +93,70 @@ class _StokScreenState extends State<StokScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Stok')),
-      body: _buildBody(theme, colorScheme),
-      floatingActionButton: FloatingActionButton.extended(
+      body: SafeArea(
+        child: Column(
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 16, 20, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Stok',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: NeumorphicTextField(
+                controller: _searchController,
+                hintText: 'Cari barang...',
+                prefixIcon: Icons.search_rounded,
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        onPressed: _searchController.clear,
+                      )
+                    : null,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(child: _buildBody()),
+          ],
+        ),
+      ),
+      floatingActionButton: NeumorphicFab(
+        icon: Icons.add_rounded,
+        tooltip: 'Tambah',
         onPressed: () => _openForm(),
-        icon: const Icon(Icons.add_rounded),
-        label: const Text('Tambah'),
+      ),
+      bottomNavigationBar: AppBottomNavBar(
+        currentTab: AppTab.stok,
+        onTap: (tab) => handleAppTabTap(
+          context,
+          tab,
+          current: AppTab.stok,
+          dashboard: (_) => const DashboardScreen(),
+          kasir: (_) => const KasirScreen(),
+          stok: (_) => const StokScreen(),
+          riwayat: (_) => const RiwayatScreen(),
+        ),
       ),
     );
   }
 
-  Widget _buildBody(ThemeData theme, ColorScheme colorScheme) {
+  Widget _buildBody() {
     if (_isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -96,7 +165,9 @@ class _StokScreenState extends State<StokScreen> {
       return _ErrorState(message: _errorMessage!, onRetry: _loadStok);
     }
 
-    if (_stokList.isEmpty) {
+    final filtered = _filteredStok;
+
+    if (filtered.isEmpty) {
       return RefreshIndicator(
         onRefresh: _loadStok,
         child: LayoutBuilder(
@@ -104,7 +175,7 @@ class _StokScreenState extends State<StokScreen> {
             physics: const AlwaysScrollableScrollPhysics(),
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: const _EmptyState(),
+              child: _EmptyState(isSearching: _searchQuery.isNotEmpty),
             ),
           ),
         ),
@@ -115,11 +186,11 @@ class _StokScreenState extends State<StokScreen> {
       onRefresh: _loadStok,
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 88),
-        itemCount: _stokList.length,
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 140),
+        itemCount: filtered.length,
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
-          final stok = _stokList[index];
+          final stok = filtered[index];
           return _StokCard(
             stok: stok,
             currencyFormat: _currencyFormat,
@@ -144,41 +215,40 @@ class _StokCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isLowStock = stok.stok <= 5;
+    final isOutOfStock = stok.stok <= 0;
+    final isLowStock = !isOutOfStock && stok.stok <= 5;
+
+    final Color pillFill;
+    final Color pillText;
+    if (isOutOfStock) {
+      pillFill = AppColors.errorFill;
+      pillText = AppColors.errorText;
+    } else if (isLowStock) {
+      pillFill = AppColors.warningFill;
+      pillText = AppColors.warningText;
+    } else {
+      pillFill = AppColors.successFill;
+      pillText = AppColors.successText;
+    }
+    final pillLabel = '${stok.stok} Pcs';
 
     return Material(
-      color: theme.cardColor,
-      borderRadius: BorderRadius.circular(16),
+      color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         onTap: onTap,
-        child: Container(
+        child: NeumorphicBox(
+          borderRadius: 20,
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: colorScheme.primary.withValues(alpha: 0.06),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
           child: Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
+              NeumorphicBox(
+                width: 48,
+                height: 48,
+                borderRadius: 24,
+                child: const Icon(
                   Icons.inventory_2_rounded,
-                  color: colorScheme.primary,
+                  color: AppColors.primary,
                   size: 22,
                 ),
               ),
@@ -189,7 +259,9 @@ class _StokCard extends StatelessWidget {
                   children: [
                     Text(
                       stok.nama,
-                      style: theme.textTheme.titleSmall?.copyWith(
+                      style: const TextStyle(
+                        color: AppColors.onSurface,
+                        fontSize: 15,
                         fontWeight: FontWeight.w600,
                       ),
                       maxLines: 1,
@@ -198,16 +270,18 @@ class _StokCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       stok.kategori,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
+                      style: const TextStyle(
+                        color: AppColors.secondary,
+                        fontSize: 12,
                       ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       currencyFormat.format(stok.harga),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.primary,
+                      style: const TextStyle(
+                        color: AppColors.primaryContainer,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
@@ -220,18 +294,15 @@ class _StokCard extends StatelessWidget {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: isLowStock
-                      ? colorScheme.errorContainer
-                      : colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
+                  color: pillFill,
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  '${stok.stok}',
-                  style: theme.textTheme.labelLarge?.copyWith(
+                  pillLabel,
+                  style: TextStyle(
+                    color: pillText,
+                    fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: isLowStock
-                        ? colorScheme.onErrorContainer
-                        : colorScheme.primary,
                   ),
                 ),
               ),
@@ -244,35 +315,45 @@ class _StokCard extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  const _EmptyState({required this.isSearching});
+
+  final bool isSearching;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.inventory_2_outlined,
-              size: 56,
-              color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Belum ada data stok',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+            NeumorphicBox(
+              width: 88,
+              height: 88,
+              borderRadius: 44,
+              child: Icon(
+                isSearching
+                    ? Icons.search_off_rounded
+                    : Icons.inventory_2_outlined,
+                size: 36,
+                color: AppColors.secondary,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 20),
             Text(
-              'Tekan tombol "Tambah" untuk menambahkan item pertama',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+              isSearching ? 'Barang tidak ditemukan' : 'Belum ada data stok',
+              style: const TextStyle(
+                color: AppColors.onSurface,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
               ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              isSearching
+                  ? 'Coba kata kunci lain'
+                  : 'Tekan tombol "+" untuk menambahkan item pertama',
+              style: const TextStyle(color: AppColors.secondary, fontSize: 13),
               textAlign: TextAlign.center,
             ),
           ],
@@ -290,29 +371,60 @@ class _ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline_rounded,
-              size: 48,
-              color: theme.colorScheme.error,
+            NeumorphicBox(
+              width: 80,
+              height: 80,
+              borderRadius: 40,
+              child: const Icon(
+                Icons.error_outline_rounded,
+                size: 32,
+                color: AppColors.errorText,
+              ),
             ),
             const SizedBox(height: 16),
             Text(
               message,
-              style: theme.textTheme.bodyMedium,
+              style: const TextStyle(color: AppColors.onSurface, fontSize: 14),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
-            OutlinedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Coba Lagi'),
+            const SizedBox(height: 20),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: onRetry,
+                child: NeumorphicBox(
+                  borderRadius: 16,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.refresh_rounded,
+                        size: 18,
+                        color: AppColors.errorText,
+                      ),
+                      SizedBox(width: 8),
+                      Text(
+                        'Coba Lagi',
+                        style: TextStyle(
+                          color: AppColors.errorText,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ],
         ),
