@@ -4,6 +4,7 @@ import '../../../core/models/stok.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_bottom_nav.dart';
+import '../../../core/widgets/fading_edges.dart';
 import '../../../core/widgets/neumorphic.dart';
 import '../../dashboard/screens/dashboard_screen.dart';
 import '../../riwayat/screens/riwayat_screen.dart';
@@ -129,10 +130,6 @@ class _KasirScreenState extends State<KasirScreen> {
     if (result == true) {
       setState(() => _cartQty.clear());
       await _loadStok();
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Transaksi berhasil disimpan')),
-      );
     }
   }
 
@@ -254,107 +251,114 @@ class _KasirScreenState extends State<KasirScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadStok,
-      child: ListView.separated(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: EdgeInsets.fromLTRB(20, 0, 20, _cartItemCount > 0 ? 16 : 140),
-        itemCount: filtered.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final stok = filtered[index];
-          final qty = _cartQty[stok.id] ?? 0;
-          final isOutOfStock = stok.stok <= 0;
+      child: FadingEdges(
+        child: ListView.separated(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(
+            20,
+            0,
+            20,
+            _cartItemCount > 0 ? 16 : 140,
+          ),
+          itemCount: filtered.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final stok = filtered[index];
+            final qty = _cartQty[stok.id] ?? 0;
+            final isOutOfStock = stok.stok <= 0;
 
-          return NeumorphicBox(
-            borderRadius: 20,
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        stok.nama,
-                        style: const TextStyle(
-                          color: AppColors.onSurface,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _currencyFormat.format(stok.harga),
-                        style: const TextStyle(
-                          color: AppColors.primaryContainer,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        isOutOfStock ? 'Stok habis' : 'Stok: ${stok.stok}',
-                        style: TextStyle(
-                          color: isOutOfStock
-                              ? AppColors.errorText
-                              : AppColors.secondary,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                if (isOutOfStock)
-                  const SizedBox.shrink()
-                else if (qty == 0)
-                  NeumorphicIconButton(
-                    icon: Icons.add_rounded,
-                    onPressed: () => _addToCart(stok),
-                    size: 44,
-                  )
-                else
-                  NeumorphicBox(
-                    style: NeumorphicStyle.pressed,
-                    borderRadius: 24,
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+            return NeumorphicBox(
+              borderRadius: 20,
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        IconButton(
-                          onPressed: () => _decreaseFromCart(stok),
-                          icon: const Icon(
-                            Icons.remove_rounded,
-                            size: 18,
-                            color: AppColors.secondary,
-                          ),
-                        ),
                         Text(
-                          '$qty',
+                          stok.nama,
                           style: const TextStyle(
                             color: AppColors.onSurface,
                             fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _currencyFormat.format(stok.harga),
+                          style: const TextStyle(
+                            color: AppColors.primaryContainer,
+                            fontSize: 14,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
-                        IconButton(
-                          onPressed: qty >= stok.stok
-                              ? null
-                              : () => _addToCart(stok),
-                          icon: const Icon(
-                            Icons.add_rounded,
-                            size: 18,
-                            color: AppColors.primaryContainer,
+                        const SizedBox(height: 2),
+                        Text(
+                          isOutOfStock ? 'Stok habis' : 'Stok: ${stok.stok}',
+                          style: TextStyle(
+                            color: isOutOfStock
+                                ? AppColors.errorText
+                                : AppColors.secondary,
+                            fontSize: 12,
                           ),
                         ),
                       ],
                     ),
                   ),
-              ],
-            ),
-          );
-        },
+                  const SizedBox(width: 8),
+                  if (isOutOfStock)
+                    const SizedBox.shrink()
+                  else if (qty == 0)
+                    NeumorphicIconButton(
+                      icon: Icons.add_rounded,
+                      onPressed: () => _addToCart(stok),
+                      size: 44,
+                    )
+                  else
+                    NeumorphicBox(
+                      style: NeumorphicStyle.pressed,
+                      borderRadius: 24,
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            onPressed: () => _decreaseFromCart(stok),
+                            icon: const Icon(
+                              Icons.remove_rounded,
+                              size: 18,
+                              color: AppColors.secondary,
+                            ),
+                          ),
+                          Text(
+                            '$qty',
+                            style: const TextStyle(
+                              color: AppColors.onSurface,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: qty >= stok.stok
+                                ? null
+                                : () => _addToCart(stok),
+                            icon: const Icon(
+                              Icons.add_rounded,
+                              size: 18,
+                              color: AppColors.primaryContainer,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

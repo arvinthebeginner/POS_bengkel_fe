@@ -102,12 +102,34 @@ class _NavItem extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         onTap: isActive ? null : onTap,
         child: isActive
-            ? Container(
-                decoration: BoxDecoration(
-                  color: AppColors.primaryContainer,
-                  borderRadius: BorderRadius.circular(24),
+            // Slightly smaller than its neighbours, so the active tab reads as
+            // pushed down into the pill rather than merely tinted red. A plain
+            // Transform rather than an AnimatedScale because tab switching goes
+            // through pushReplacement (see handleAppTabTap), which rebuilds the
+            // whole bar — there is never an old value to animate from.
+            ? Transform.scale(
+                scale: 0.96,
+                child: NeumorphicInset(
+                  borderRadius: 24,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [AppColors.primaryDim, AppColors.primaryContainer],
+                  ),
+                  shadows: const [
+                    BoxShadow(
+                      color: AppColors.primaryInset,
+                      offset: Offset(4, 4),
+                      blurRadius: 8,
+                    ),
+                    BoxShadow(
+                      color: Color(0x33FFFFFF),
+                      offset: Offset(-4, -4),
+                      blurRadius: 6,
+                    ),
+                  ],
+                  child: content,
                 ),
-                child: content,
               )
             : content,
       ),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
@@ -252,7 +253,7 @@ class _NeumorphicTextFieldState extends State<NeumorphicTextField> {
   }
 }
 
-/// A raised circular FAB — the one saturated element on the Stok screen,
+/// A raised circular FAB — the one saturated red element on the Stok screen,
 /// styled with the same soft, low-opacity red glow as [NeumorphicPrimaryButton]
 /// rather than a hard-edged dual shadow, so it doesn't overpower the pastel UI.
 class NeumorphicFab extends StatelessWidget {
@@ -299,6 +300,88 @@ class NeumorphicFab extends StatelessWidget {
 
     return tooltip != null ? Tooltip(message: tooltip, child: button) : button;
   }
+}
+
+/// A surface with real inset shadows — the "pressed into the surface" look.
+///
+/// Flutter's [BoxShadow] only ever draws *outside* a box, so a genuine inner
+/// shadow has to be painted by hand. Each shadow is drawn as everything
+/// outside a shifted copy of the rounded rect, clipped back to the shape, so
+/// the offset direction decides which inner edge goes dark: an offset of
+/// `(4, 4)` pushes the hole down-right and leaves the dark rim at the
+/// top-left, which is what a dent looks like with light coming from above.
+class NeumorphicInset extends StatelessWidget {
+  const NeumorphicInset({
+    super.key,
+    required this.child,
+    required this.borderRadius,
+    required this.shadows,
+    this.gradient,
+    this.color,
+    this.padding,
+  });
+
+  final Widget child;
+  final double borderRadius;
+  final List<BoxShadow> shadows;
+  final Gradient? gradient;
+  final Color? color;
+  final EdgeInsetsGeometry? padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      foregroundPainter: _InsetShadowPainter(
+        radius: borderRadius,
+        shadows: shadows,
+      ),
+      child: Container(
+        padding: padding,
+        decoration: BoxDecoration(
+          color: color,
+          gradient: gradient,
+          borderRadius: BorderRadius.circular(borderRadius),
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _InsetShadowPainter extends CustomPainter {
+  const _InsetShadowPainter({required this.radius, required this.shadows});
+
+  final double radius;
+  final List<BoxShadow> shadows;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rrect = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      Radius.circular(radius),
+    );
+
+    canvas.save();
+    canvas.clipRRect(rrect);
+    for (final shadow in shadows) {
+      // Big enough that the blurred edge never creeps into view.
+      final outer = Path()
+        ..addRect(rrect.outerRect.inflate(size.longestSide));
+      final inner = Path()..addRRect(rrect.shift(shadow.offset));
+      canvas.drawPath(
+        Path.combine(PathOperation.difference, outer, inner),
+        Paint()
+          ..color = shadow.color
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, shadow.blurSigma),
+      );
+    }
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(_InsetShadowPainter oldDelegate) =>
+      oldDelegate.radius != radius ||
+      !listEquals(oldDelegate.shadows, shadows);
 }
 
 /// A small circular raised icon button (nav icons, header actions).

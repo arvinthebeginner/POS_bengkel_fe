@@ -21,6 +21,12 @@ class AppColors {
   static const primaryContainer = Color(0xFFC10207);
   static const onPrimary = Color(0xFFFFFFFF);
 
+  /// Dark side of the gradient on a sunken red surface.
+  static const primaryDim = Color(0xFF8E0002);
+
+  /// Top-left inner shadow on a sunken red surface.
+  static const primaryInset = Color(0xFF6B0002);
+
   static const secondary = Color(0xFF595F65);
   static const secondaryContainer = Color(0xFFDEE3EA);
 

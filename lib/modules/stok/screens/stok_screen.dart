@@ -4,6 +4,7 @@ import '../../../core/models/stok.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_bottom_nav.dart';
+import '../../../core/widgets/fading_edges.dart';
 import '../../../core/widgets/neumorphic.dart';
 import '../../dashboard/screens/dashboard_screen.dart';
 import '../../kasir/screens/kasir_screen.dart';
@@ -184,19 +185,21 @@ class _StokScreenState extends State<StokScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadStok,
-      child: ListView.separated(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 140),
-        itemCount: filtered.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final stok = filtered[index];
-          return _StokCard(
-            stok: stok,
-            currencyFormat: _currencyFormat,
-            onTap: () => _openForm(existing: stok),
-          );
-        },
+      child: FadingEdges(
+        child: ListView.separated(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 140),
+          itemCount: filtered.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final stok = filtered[index];
+            return _StokCard(
+              stok: stok,
+              currencyFormat: _currencyFormat,
+              onTap: () => _openForm(existing: stok),
+            );
+          },
+        ),
       ),
     );
   }

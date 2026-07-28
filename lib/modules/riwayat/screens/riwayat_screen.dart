@@ -4,6 +4,7 @@ import '../../../core/models/transaksi.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_bottom_nav.dart';
+import '../../../core/widgets/fading_edges.dart';
 import '../../../core/widgets/neumorphic.dart';
 import '../../dashboard/screens/dashboard_screen.dart';
 import '../../kasir/screens/kasir_screen.dart';
@@ -131,19 +132,21 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
     return RefreshIndicator(
       onRefresh: _loadRiwayat,
-      child: ListView.separated(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-        itemCount: _riwayat.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 12),
-        itemBuilder: (context, index) {
-          final transaksi = _riwayat[index];
-          return _TransaksiCard(
-            transaksi: transaksi,
-            currencyFormat: _currencyFormat,
-            dateFormat: _dateFormat,
-          );
-        },
+      child: FadingEdges(
+        child: ListView.separated(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+          itemCount: _riwayat.length,
+          separatorBuilder: (_, _) => const SizedBox(height: 12),
+          itemBuilder: (context, index) {
+            final transaksi = _riwayat[index];
+            return _TransaksiCard(
+              transaksi: transaksi,
+              currencyFormat: _currencyFormat,
+              dateFormat: _dateFormat,
+            );
+          },
+        ),
       ),
     );
   }
@@ -205,9 +208,7 @@ class _TransaksiCardState extends State<_TransaksiCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          transaksi.tanggal != null
-                              ? widget.dateFormat.format(transaksi.tanggal!)
-                              : 'Tanggal tidak diketahui',
+                          transaksi.kode,
                           style: const TextStyle(
                             color: AppColors.onSurface,
                             fontSize: 14,
@@ -216,7 +217,7 @@ class _TransaksiCardState extends State<_TransaksiCard> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '$totalQty item',
+                          '${transaksi.tanggal != null ? widget.dateFormat.format(transaksi.tanggal!) : 'Tanggal tidak diketahui'} • $totalQty item',
                           style: const TextStyle(
                             color: AppColors.secondary,
                             fontSize: 12,

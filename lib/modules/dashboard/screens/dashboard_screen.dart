@@ -4,6 +4,7 @@ import '../../../core/models/transaksi.dart';
 import '../../../core/services/api_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_bottom_nav.dart';
+import '../../../core/widgets/fading_edges.dart';
 import '../../../core/widgets/neumorphic.dart';
 import '../../auth/screens/login_screen.dart';
 import '../../kasir/screens/kasir_screen.dart';
@@ -119,12 +120,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final first = transaksi.barang.first;
     if (transaksi.barang.length == 1) return first.nama;
     return '${first.nama} +${transaksi.barang.length - 1} lainnya';
-  }
-
-  String _activityCode(Transaksi transaksi) {
-    final id = transaksi.id;
-    final suffix = id.length >= 4 ? id.substring(id.length - 4) : id;
-    return 'TRX-$suffix'.toUpperCase();
   }
 
   @override
@@ -312,22 +307,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           style: TextStyle(color: AppColors.secondary),
                         ),
                       )
-                    : ListView.separated(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
-                        itemCount: _recentTransaksi.length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final t = _recentTransaksi[index];
-                          return _ActivityCard(
-                            label: _activityLabel(t),
-                            code: _activityCode(t),
-                            time: t.tanggal != null
-                                ? DateFormat('HH:mm').format(t.tanggal!)
-                                : '-',
-                            amount: _currencyFormat.format(t.total),
-                          );
-                        },
+                    : FadingEdges(
+                        child: ListView.separated(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+                          itemCount: _recentTransaksi.length,
+                          separatorBuilder: (_, _) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final t = _recentTransaksi[index];
+                            return _ActivityCard(
+                              label: _activityLabel(t),
+                              code: t.kode,
+                              time: t.tanggal != null
+                                  ? DateFormat('HH:mm').format(t.tanggal!)
+                                  : '-',
+                              amount: _currencyFormat.format(t.total),
+                            );
+                          },
+                        ),
                       ),
               ),
             ],
